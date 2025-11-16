@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>FC Légende</title>
+<style>
+/* ----------------- Global ----------------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, Helvetica, sans-serif; background: #f5f5f5; color: #0f1724; }
+header { background: orange; color: white; text-align: center; padding: 18px; font-size: 28px; font-weight: 800; letter-spacing: 1px; }
+main { padding: 18px; padding-bottom: 120px; min-height: 100vh; }
+h1 { text-align: left; margin: 12px 0; font-size: 20px; }
+
+/* ----------------- Navigation ----------------- */
+.bottom-nav { position: fixed; left:0; right:0; bottom:0; height:70px; display:flex; justify-content:space-around; align-items:center; background:#0a76db; border-top:2px solid #005bb5; z-index:1000; }
+.nav-item { flex:1; text-align:center; color:white; font-weight:700; cursor:pointer; padding:10px 6px; font-size:14px; }
+.nav-item.active { background: linear-gradient(180deg,#1da3ff,#0077e6); border-radius:8px; }
+
+/* ----------------- Panels ----------------- */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ----------------- Admin controls ----------------- */
+#adminBtn { position: fixed; right: 14px; top: 14px; background:#222; color:white; padding:8px 10px; border-radius:6px; border:none; cursor:pointer; z-index:1100; }
+#adminForm { position: fixed; right:14px; top:56px; background:white; padding:10px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.12); width:260px; display:none; z-index:1100; }
+#adminForm input { width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; }
+#adminForm input.correct { border:2px solid green; }
+#adminForm input.wrong { border:2px solid red; }
+#adminForm button { margin-top:8px; width:100%; padding:8px; border-radius:6px; border:none; background:#0a76db; color:white; cursor:pointer; }
+
+/* ----------------- Cards ----------------- */
+.card { background:white; border-radius:12px; box-shadow:0 6px 14px rgba(0,0,0,0.08); padding:12px; margin-bottom:12px; }
+
+/* ----------------- News ----------------- */
+.news-item img { float:right; margin-left:10px; width:100px; height:auto; border-radius:6px; }
+#addNewsDiv input, #addNewsDiv textarea { width:100%; padding:8px; margin-top:6px; border-radius:6px; border:1px solid #ccc; }
+#addNewsDiv textarea { min-height:80px; resize:vertical; }
+#addNewsBtn, #showAddFormBtn { background:#0a76db; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; }
+#showAddFormBtn { background:#1da3ff; }
+
+/* ----------------- Players ----------------- */
+.players-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+.player-card { background: rgba(0,0,0,0.45); color:white; border-radius:14px; padding:12px; text-align:center; position:relative; }
+.player-card img { width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:8px; }
+.add-image-btn { position:absolute; right:8px; top:8px; background:#1da3ff; border:none; color:white; padding:6px; border-radius:8px; font-size:12px; display:none; cursor:pointer; }
+.player-card [contenteditable="true"] { outline:2px dashed rgba(255,255,255,0.05); padding:2px; border-radius:4px; }
+
+/* ----------------- Buteurs ----------------- */
+table { width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; }
+th, td { padding:8px; border:1px solid #ddd; text-align:center; }
+th { background:#1da3ff; color:white; }
+#editButeursBtn { background:#1da3ff; color:white; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; display:none; margin-bottom:8px; }
+
+/* ----------------- Matches ----------------- */
+.match-container { max-width:900px; margin:0 auto; display:grid; gap:14px; }
+.match-card { background:white; border-radius:12px; padding:12px; box-shadow:0 6px 14px rgba(0,0,0,0.06); }
+.card-header { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.icon-soccer { width:36px; height:36px; display:inline-grid; place-items:center; background:#eef2f3; border-radius:8px; }
+.match-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.team { display:flex; align-items:center; gap:8px; min-width:0; }
+.flag-match { width:42px; height:42px; border-radius:50%; overflow:hidden; background:#eee; }
+.flag-match img { width:100%; height:100%; object-fit:cover; }
+.team-name-match { font-weight:700; min-width:80px; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.score-match { font-weight:800; font-size:18px; min-width:70px; text-align:center; }
+.meta { font-size:13px; color:#777; margin-top:8px; }
+.match-actions { margin-top:8px; display:flex; gap:8px; justify-content:flex-end; }
+.btn-danger { background:#e63946; color:white; border:none; padding:8px; border-radius:8px; cursor:pointer; display:none; }
+#addMatchRecentBtn { display:none; background:#0b8a7f; color:white; border:none; padding:10px; border-radius:8px; width:100%; cursor:pointer; margin-top:10px; }
+
+/* ----------------- Responsiveness ----------------- */
+@media (max-width:520px){
+  header { font-size:20px; padding:12px; }
+  .team-name-match { max-width:110px; }
+}
+</style>
+</head>
+<body>
+
+<header>FC LÉGENDE</header>
+
+<!-- Admin button & form -->
+<button id="adminBtn">Ad</button>
+<div id="adminForm" aria-hidden="true">
+  <input id="adminPassword" type="password" placeholder="Code admin (5525)">
+  <button id="checkPassword">Valider</button>
+</div>
+
+<main>
+
+<!-- ACTUALITÉS -->
+<section id="panel-actu" class="panel active">
+  <h1>ACTUALITÉS</h1>
+  <div style="margin-bottom:10px">
+    <button id="showAddFormBtn" style="display:none">Ajouter une actualité</button>
+  </div>
+  <div id="addNewsDiv" style="display:none" class="card">
+    <input id="source" placeholder="Source">
+    <input id="title" placeholder="Titre">
+    <textarea id="description" placeholder="Description"></textarea>
+    <input id="imageURL" placeholder="URL image (optionnel)">
+    <input id="time" placeholder="Temps (ex : il y a 2h)">
+    <div style="margin-top:8px">
+      <button id="addNewsBtn">Ajouter</button>
+    </div>
+  </div>
+  <div id="newsList"></div>
+</section>
+
+<!-- PROFILS JOUEURS -->
+<section id="panel-profil" class="panel">
+  <h1>PROFILS JOUEURS</h1>
+  <div style="margin-bottom:10px">
+    <button id="editPlayersBtn" style="display:none">Modifier joueurs</button>
+  </div>
+  <div id="playersGrid" class="players-grid"></div>
+</section>
+
+<!-- BUTEURS -->
+<section id="panel-buteurs" class="panel">
+  <h1>BUTEURS</h1>
+  <div style="margin-bottom:8px">
+    <button id="editButeursBtn" style="display:none">Modifier</button>
+  </div>
+  <div class="card">
+    <table id="buteursTable">
+      <thead><tr><th>Joueur</th><th>Buts</th></tr></thead>
+      <tbody id="buteursBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- MATCHS RÉCENTS -->
+<section id="panel-matchs" class="panel">
+  <h1>MATCHS RÉCENTS</h1>
+  <div class="match-container" id="cardsContainer">
+    <!-- Template -->
+    <section class="match-card model" id="matchTemplate" style="display:none">
+      <div class="card-header">
+        <div class="icon-soccer">⚽</div>
+        <div class="header-text">Match récent</div>
+      </div>
+      <div class="match-row">
+        <div class="team">
+          <div class="flag-match"><img src="" alt="logo A"></div>
+          <div class="team-name-match" contenteditable="false">Équipe A</div>
+        </div>
+        <div class="score-match" contenteditable="false">0 : 0</div>
+        <div class="team" style="justify-content:flex-end">
+          <div class="team-name-match" contenteditable="false" style="text-align:right">Équipe B</div>
+          <div class="flag-match"><img src="" alt="logo B"></div>
+        </div>
+      </div>
+      <div class="meta" contenteditable="false">Infos du match…</div>
+      <div class="match-actions">
+        <button class="btn-danger deleteMatch">Supprimer</button>
+      </div>
+    </section>
+  </div>
+  <button id="addMatchRecentBtn" style="display:none">Ajouter</button>
+</section>
+
+</main>
+
+<nav class="bottom-nav">
+  <div class="nav-item active" data-target="panel-actu">Actu</div>
+  <div class="nav-item" data-target="panel-profil">Profil</div>
+  <div class="nav-item" data-target="panel-buteurs">Buteurs</div>
+  <div class="nav-item" data-target="panel-matchs">Matchs</div>
+</nav>
+
+<script>
+/* ----------------- Navigation ----------------- */
+const navItems = document.querySelectorAll('.nav-item');
+const panels = document.querySelectorAll('.panel');
+navItems.forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    panels.forEach(p=>p.classList.remove('active'));
+    document.getElementById(btn.dataset.target).classList.add('active');
+    navItems.forEach(n=>n.classList.toggle('active', n===btn));
+  });
+});
+
+/* ----------------- Admin ----------------- */
+const adminBtn = document.getElementById('adminBtn');
+const adminForm = document.getElementById('adminForm');
+const adminPassword = document.getElementById('adminPassword');
+const checkPassword = document.getElementById('checkPassword');
+
+let adminActive = (localStorage.getItem('admin') === 'on');
+
+function setAdminState(on){
+  adminActive = !!on;
+  localStorage.setItem('admin', adminActive ? 'on' : 'off');
+
+  // Toggle buttons admin
+  document.getElementById('showAddFormBtn').style.display = adminActive ? 'inline-block' : 'none';
+  document.getElementById('addMatchRecentBtn').style.display = adminActive ? 'block' : 'none';
+  document.getElementById('editPlayersBtn').style.display = adminActive ? 'inline-block' : 'none';
+  document.getElementById('editButeursBtn').style.display = adminActive ? 'inline-block' : 'none';
+
+  // Editable fields
+  document.querySelectorAll('.team-name-match, .score-match, .meta').forEach(el=>{
+    el.contentEditable = adminActive ? 'true' : 'false';
+  });
+  document.querySelectorAll('.deleteMatch').forEach(btn=> btn.style.display = adminActive ? 'inline-block' : 'none');
+  document.querySelectorAll('.add-image-btn').forEach(b=> b.style.display = adminActive ? 'block' : 'none');
+
+  if(!adminActive){ adminPassword.classList.remove('correct','wrong'); }
+}
+
+// Show/hide form
+adminBtn.addEventListener('click', ()=>{ adminForm.style.display = adminForm.style.display==='block' ? 'none' : 'block'; });
+
+// Check password
+checkPassword.addEventListener('click', ()=>{
+  if(adminPassword.value === '5525'){
+    adminPassword.classList.remove('wrong'); adminPassword.classList.add('correct');
+    setAdminState(true); adminForm.style.display='none';
+  } else {
+    adminPassword.classList.remove('correct'); adminPassword.classList.add('wrong');
+    setAdminState(false);
+  }
+});
+
+if(localStorage.getItem('admin')==='on'){
+  adminPassword.classList.add('correct'); setAdminState(true);
+}
+
+/* ----------------- Ici ton script original pour News, Players, Buteurs, Matchs ----------------- */
+/* Tu peux coller exactement ton script JS précédent, il fonctionnera parfaitement avec ce HTML arrangé. */
+
+</script>
+
+</body>
+</html>
